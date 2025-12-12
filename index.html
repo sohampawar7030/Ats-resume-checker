@@ -48,18 +48,6 @@
             padding: 40px;
         }
 
-        .api-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-        }
-
-        .api-section h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-
         .input-group {
             margin-bottom: 20px;
         }
@@ -130,6 +118,7 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             font-weight: 600;
+            margin-right: 10px;
         }
 
         .btn:hover {
@@ -141,6 +130,14 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
         }
 
         .results {
@@ -198,6 +195,63 @@
             border-left-color: #4caf50;
         }
 
+        .correction-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .correction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .correction-type {
+            background: #ff9800;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .correction-content {
+            display: grid;
+            gap: 10px;
+        }
+
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .before, .after {
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .before {
+            background: #ffebee;
+            border-left: 3px solid #f44336;
+        }
+
+        .after {
+            background: #e8f5e9;
+            border-left: 3px solid #4caf50;
+        }
+
+        .before strong, .after strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
@@ -246,30 +300,59 @@
             margin-top: 20px;
             display: none;
         }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mandatory-badge {
+            background: #f44336;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 8px;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .before-after {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🎯 ATS Resume Checker</h1>
-            <p>Analyze your resume with AI-powered insights</p>
+            <p>AI-Powered Resume Analysis with Instant Corrections</p>
         </div>
 
         <div class="content">
-            <div class="api-section">
-                <h3>🔑 Gemini API Configuration</h3>
-                <div class="input-group">
-                    <label for="apiKey">Gemini API Key:</label>
-                    <input type="text" id="apiKey" placeholder="Enter your Gemini API key">
-                    <small style="color: #666; display: block; margin-top: 5px;">
-                        Get your free API key from <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a>
-                    </small>
-                </div>
+            <div class="info-box">
+                <h4>🔒 API Integration Active</h4>
+                <p>Using Gemini 2.0 Flash for intelligent resume analysis. Your resume is analyzed securely and results are generated in real-time.</p>
             </div>
 
             <div class="input-group">
                 <label for="jobDescription">Job Description (Optional):</label>
-                <textarea id="jobDescription" placeholder="Paste the job description here to get tailored feedback..."></textarea>
+                <textarea id="jobDescription" placeholder="Paste the job description here to get tailored feedback and mandatory corrections..."></textarea>
             </div>
 
             <div class="input-group">
@@ -284,11 +367,15 @@
                 <div id="fileName" style="margin-top: 10px; color: #667eea; font-weight: 600;"></div>
             </div>
 
-            <button class="btn" id="analyzeBtn" disabled>Analyze Resume</button>
+            <div class="button-group">
+                <button class="btn" id="analyzeBtn" disabled>Analyze Resume</button>
+                <button class="btn btn-secondary" id="generateCorrectionsBtn" disabled style="display:none;">Generate Corrections</button>
+                <button class="btn btn-download" id="downloadReportBtn" disabled style="display:none;">Download Report</button>
+            </div>
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>Analyzing your resume with AI...</p>
+                <p id="loadingText">Analyzing your resume with AI...</p>
             </div>
 
             <div class="error-message" id="errorMessage"></div>
@@ -303,6 +390,16 @@
                 <div class="analysis-section">
                     <h3>📊 AI Analysis Summary</h3>
                     <div id="aiSummary"></div>
+                </div>
+
+                <div class="analysis-section" id="mandatorySection" style="display:none;">
+                    <h3>🚨 Mandatory Changes <span class="mandatory-badge">CRITICAL</span></h3>
+                    <div id="mandatoryChanges"></div>
+                </div>
+
+                <div class="analysis-section" id="correctionsSection" style="display:none;">
+                    <h3>✏️ Detailed Corrections & Suggestions</h3>
+                    <div id="corrections"></div>
                 </div>
 
                 <div class="analysis-section">
@@ -333,24 +430,21 @@
         const fileInput = document.getElementById('fileInput');
         const fileName = document.getElementById('fileName');
         const analyzeBtn = document.getElementById('analyzeBtn');
+        const generateCorrectionsBtn = document.getElementById('generateCorrectionsBtn');
+        const downloadReportBtn = document.getElementById('downloadReportBtn');
         const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
         const results = document.getElementById('results');
         const errorMessage = document.getElementById('errorMessage');
-        const apiKeyInput = document.getElementById('apiKey');
         const jobDescInput = document.getElementById('jobDescription');
 
         let uploadedFile = null;
         let resumeText = '';
+        let currentAnalysis = null;
 
-        // Load saved API key
-        if (localStorage.getItem('geminiApiKey')) {
-            apiKeyInput.value = localStorage.getItem('geminiApiKey');
-        }
-
-        // Save API key
-        apiKeyInput.addEventListener('change', () => {
-            localStorage.setItem('geminiApiKey', apiKeyInput.value);
-        });
+        // API configuration
+        const GEMINI_API_KEY = 'AIzaSyAZ36WepnlmMBT4GzdxDlBficf3si4ZL4E';
+        const API_BASE_URL = '/api'; // For future backend integration
 
         uploadArea.addEventListener('click', () => fileInput.click());
 
@@ -398,28 +492,34 @@
         }
 
         analyzeBtn.addEventListener('click', analyzeResume);
+        generateCorrectionsBtn.addEventListener('click', generateCorrections);
+        downloadReportBtn.addEventListener('click', downloadReport);
 
         async function analyzeResume() {
-            const apiKey = apiKeyInput.value.trim();
-
-            if (!apiKey) {
-                showError('Please enter your Gemini API key');
-                return;
-            }
-
             if (!uploadedFile) {
                 showError('Please upload a resume first');
                 return;
             }
 
             loading.style.display = 'block';
+            loadingText.textContent = 'Analyzing your resume with AI...';
             results.style.display = 'none';
             errorMessage.style.display = 'none';
             analyzeBtn.disabled = true;
 
             try {
-                const analysis = await getGeminiAnalysis(apiKey, resumeText, jobDescInput.value);
+                // In production, this would call your backend API
+                // const analysis = await callBackendAPI('/analyze', { resume: resumeText, jobDescription: jobDescInput.value });
+                
+                // For demo purposes, using direct API call (in production, use backend)
+                const analysis = await getGeminiAnalysis(resumeText, jobDescInput.value);
+                currentAnalysis = analysis;
                 displayResults(analysis);
+                
+                generateCorrectionsBtn.style.display = 'inline-block';
+                generateCorrectionsBtn.disabled = false;
+                downloadReportBtn.style.display = 'inline-block';
+                downloadReportBtn.disabled = false;
             } catch (error) {
                 showError('Analysis failed: ' + error.message);
             } finally {
@@ -428,7 +528,44 @@
             }
         }
 
-        async function getGeminiAnalysis(apiKey, resume, jobDesc) {
+        async function generateCorrections() {
+            loading.style.display = 'block';
+            loadingText.textContent = 'Generating detailed corrections...';
+            errorMessage.style.display = 'none';
+            generateCorrectionsBtn.disabled = true;
+
+            try {
+                const corrections = await getDetailedCorrections(resumeText, jobDescInput.value, currentAnalysis);
+                displayCorrections(corrections);
+            } catch (error) {
+                showError('Failed to generate corrections: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+                generateCorrectionsBtn.disabled = false;
+            }
+        }
+
+        async function callBackendAPI(endpoint, data) {
+            // This is how you would call your backend in production
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error('Backend API request failed');
+            }
+
+            return await response.json();
+        }
+
+        async function getGeminiAnalysis(resume, jobDesc) {
+            // API Key embedded (Note: For production, use backend to secure the key)
+            const API_KEY = 'AIzaSyAZ36WepnlmMBT4GzdxDlBficf3si4ZL4E';
+            
             const prompt = `You are an ATS (Applicant Tracking System) expert. Analyze the following resume and provide a detailed assessment.
 
 ${jobDesc ? `Job Description:\n${jobDesc}\n\n` : ''}
@@ -441,6 +578,13 @@ Provide your analysis in the following JSON format:
   "score": <number 0-100>,
   "scoreDescription": "<brief description>",
   "summary": "<2-3 sentence overview>",
+  "mandatoryChanges": [
+    {
+      "issue": "<critical issue>",
+      "reason": "<why this is mandatory>",
+      "impact": "<ATS impact>"
+    }
+  ],
   "strengths": ["<strength 1>", "<strength 2>", ...],
   "improvements": ["<improvement 1>", "<improvement 2>", ...],
   "keywords": {
@@ -450,27 +594,33 @@ Provide your analysis in the following JSON format:
   "recommendations": ["<recommendation 1>", "<recommendation 2>", ...]
 }
 
-Focus on:
-- ATS compatibility (formatting, keywords, structure)
-- Keyword optimization
-- Content quality and relevance
-- Professional presentation
-${jobDesc ? '- Match with job description' : ''}
+Focus on MANDATORY changes that are critical for ATS compatibility:
+- Missing contact information
+- Poor formatting that ATS cannot parse
+- Missing critical keywords from job description
+- Incorrect file structure or encoding issues
 
 Return ONLY the JSON object, no additional text.`;
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+            // In production, this API call would be on your backend
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{
                         parts: [{ text: prompt }]
-                    }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 2048,
+                    }
                 })
             });
 
             if (!response.ok) {
-                throw new Error('Failed to get AI analysis. Check your API key.');
+                throw new Error('Failed to get AI analysis');
             }
 
             const data = await response.json();
@@ -484,11 +634,73 @@ Return ONLY the JSON object, no additional text.`;
             throw new Error('Invalid response format from AI');
         }
 
+        async function getDetailedCorrections(resume, jobDesc, analysis) {
+            // API Key embedded
+            const API_KEY = 'AIzaSyAZ36WepnlmMBT4GzdxDlBficf3si4ZL4E';
+            
+            const prompt = `Based on the resume analysis, provide specific corrections with before/after examples.
+
+Resume:
+${resume}
+
+${jobDesc ? `Job Description:\n${jobDesc}\n\n` : ''}
+
+Previous Analysis:
+${JSON.stringify(analysis, null, 2)}
+
+Generate detailed corrections in this JSON format:
+{
+  "corrections": [
+    {
+      "type": "<grammar|formatting|content|keyword>",
+      "severity": "<critical|high|medium|low>",
+      "section": "<resume section>",
+      "issue": "<what's wrong>",
+      "before": "<original text>",
+      "after": "<corrected text>",
+      "explanation": "<why this change matters>"
+    }
+  ]
+}
+
+Include at least 5-10 specific, actionable corrections. Return ONLY the JSON object.`;
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to generate corrections');
+
+            const data = await response.json();
+            const text = data.candidates[0].content.parts[0].text;
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            
+            return jsonMatch ? JSON.parse(jsonMatch[0]) : { corrections: [] };
+        }
+
         function displayResults(analysis) {
             document.getElementById('scoreValue').textContent = analysis.score;
             document.getElementById('scoreDescription').textContent = analysis.scoreDescription;
 
             document.getElementById('aiSummary').innerHTML = `<div class="analysis-item">${analysis.summary}</div>`;
+
+            // Display mandatory changes if any
+            if (analysis.mandatoryChanges && analysis.mandatoryChanges.length > 0) {
+                document.getElementById('mandatorySection').style.display = 'block';
+                document.getElementById('mandatoryChanges').innerHTML = analysis.mandatoryChanges
+                    .map(change => `
+                        <div class="analysis-item error">
+                            <strong>🚨 ${change.issue}</strong>
+                            <p style="margin-top: 8px;"><strong>Why it's mandatory:</strong> ${change.reason}</p>
+                            <p style="margin-top: 5px;"><strong>Impact:</strong> ${change.impact}</p>
+                        </div>
+                    `).join('');
+            }
 
             document.getElementById('strengths').innerHTML = analysis.strengths
                 .map(s => `<div class="analysis-item success">${s}</div>`).join('');
@@ -517,6 +729,85 @@ Return ONLY the JSON object, no additional text.`;
                 .map(r => `<div class="analysis-item">${r}</div>`).join('');
 
             results.style.display = 'block';
+        }
+
+        function displayCorrections(data) {
+            const correctionsSection = document.getElementById('correctionsSection');
+            const correctionsDiv = document.getElementById('corrections');
+            
+            correctionsSection.style.display = 'block';
+            
+            correctionsDiv.innerHTML = data.corrections
+                .map(correction => `
+                    <div class="correction-item">
+                        <div class="correction-header">
+                            <strong>${correction.section}</strong>
+                            <span class="correction-type">${correction.type} - ${correction.severity}</span>
+                        </div>
+                        <p style="margin: 10px 0;"><strong>Issue:</strong> ${correction.issue}</p>
+                        <div class="before-after">
+                            <div class="before">
+                                <strong>❌ Before:</strong>
+                                <p style="margin-top: 5px;">${correction.before}</p>
+                            </div>
+                            <div class="after">
+                                <strong>✅ After:</strong>
+                                <p style="margin-top: 5px;">${correction.after}</p>
+                            </div>
+                        </div>
+                        <p style="margin-top: 10px; color: #666;"><em>💡 ${correction.explanation}</em></p>
+                    </div>
+                `).join('');
+        }
+
+        function downloadReport() {
+            if (!currentAnalysis) return;
+
+            const reportContent = `
+ATS RESUME ANALYSIS REPORT
+==========================
+
+Score: ${currentAnalysis.score}/100
+${currentAnalysis.scoreDescription}
+
+SUMMARY
+-------
+${currentAnalysis.summary}
+
+MANDATORY CHANGES
+-----------------
+${currentAnalysis.mandatoryChanges?.map((c, i) => `${i + 1}. ${c.issue}\n   Reason: ${c.reason}\n   Impact: ${c.impact}`).join('\n\n') || 'None'}
+
+STRENGTHS
+---------
+${currentAnalysis.strengths.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+
+IMPROVEMENTS NEEDED
+-------------------
+${currentAnalysis.improvements.map((i, idx) => `${idx + 1}. ${i}`).join('\n')}
+
+KEYWORDS FOUND
+--------------
+${currentAnalysis.keywords.found.join(', ')}
+
+MISSING KEYWORDS
+----------------
+${currentAnalysis.keywords.missing.join(', ')}
+
+RECOMMENDATIONS
+---------------
+${currentAnalysis.recommendations.map((r, i) => `${i + 1}. ${r}`).join('\n')}
+
+Generated on: ${new Date().toLocaleString()}
+            `.trim();
+
+            const blob = new Blob([reportContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ats-resume-report.txt';
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         function showError(message) {
